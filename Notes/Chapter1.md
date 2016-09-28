@@ -26,3 +26,6 @@
 
 **Are exceptions side-effects?**
 - They are. Method returning exceptions do not guarantee return value of declared type. Hence, they do not conform to the definition of referential transparency.
+
+**Links/Videos:
+https://www.youtube.com/watch?v=eOYal8elnZk
