@@ -1,3 +1,5 @@
+# Chapter 2: Getting Started
+
 **Anonymous functions?**
 - Reduce boiler plate
 - Used with higher-order functions
