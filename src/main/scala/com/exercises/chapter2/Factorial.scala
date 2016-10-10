@@ -1,5 +1,6 @@
-package com.exercises.chapter1
+package com.exercises.chapter2
 
+//EXERCISE 1
 object Factorial {
   def calculateTailRec(n: Int): Int = {
     @annotation.tailrec

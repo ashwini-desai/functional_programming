@@ -1,4 +1,4 @@
-package com.exercises.chapter1
+package com.exercises.chapter2
 
 import org.scalatest._
 
