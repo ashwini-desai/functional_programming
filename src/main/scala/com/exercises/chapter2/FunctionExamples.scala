@@ -3,12 +3,12 @@ package com.exercises.chapter2
 object FunctionExamples {
 
   //EXERCISE 3
-  def partial[A,B,C](a: A, f: (A,B) => C): B => C =
+  def partialApplication[A,B,C](a: A, f: (A,B) => C): B => C =
     (b: B) => f(a,b)
 
   //EXERCISE 4
   def curry[A,B,C](f: (A, B) => C): A => (B => C) =
-    (a: A) => partial(a, f)
+    (a: A) => partialApplication(a, f)
 
   //EXERCISE 5
   def uncurry[A,B,C](f: A => B => C): (A, B) => C =
