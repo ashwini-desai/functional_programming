@@ -1,7 +1,6 @@
 package com.exercises.chapter3
 
 import scala.annotation.tailrec
-import scala.collection.immutable
 
 sealed trait List[+A]
 
@@ -10,6 +9,10 @@ case object Nil extends List[Nothing]
 case class Cons[+A](head: A, tail: List[A]) extends List[A]
 
 object List {
+
+  def apply[A](as: A*): List[A] =
+    if (as.isEmpty) Nil
+    else Cons(as.head, apply(as.tail: _*))
 
   //EXERCISE 2
   def tail[A](xs: List[A]): List[A] = xs match {
@@ -28,13 +31,21 @@ object List {
   }
 
   //EXERCISE 4
-  def dropUntil[A](xs: List[A])(predicate: A => Boolean): List[A] = {
+  def dropWhile[A](xs: List[A])(predicate: A => Boolean): List[A] = {
     @tailrec
     def loop(ys: List[A]): List[A] = ys match {
       case Cons(first, remaining) if predicate(first) => loop(remaining)
       case x => x
     }
     loop(xs)
+  }
+
+  def dropWhile1[A](xs: List[A])(predicate: A => Boolean): List[A] = {
+    xs match {
+      case Nil => Nil
+      case Cons(first, tail) if predicate(first) => dropWhile1(tail)(predicate)
+      case Cons(first, tail) if !predicate(first) => Cons(first, tail)
+    }
   }
 
   //EXERCISE 5
@@ -53,16 +64,23 @@ object List {
     loop(xs, Nil)
   }
 
+  def init1[A](xs: List[A]): List[A] = {
+    xs match {
+      case Cons(_, Nil) | Nil => Nil
+      case Cons(first, tail) => Cons(first, init1(tail))
+    }
+  }
+
+  //EXERCISE 7
+  def product(xs: List[Double]): Double = foldLeft(xs, 1.0)((acc, x) => acc * x)
+
+  //EXERCISE 9
   def foldRight[A, B](xs: List[A], z: B)(f: (A, B) => B): B =
     xs match {
       case Cons(first, tail) => f(first, foldRight(tail, z)(f))
       case Nil => z
     }
 
-  //EXERCISE 7
-  def product(xs: List[Double]): Double = foldRight(xs, 1.0)((x, acc) => acc * x)
-
-  //EXERCISE 9
   def length[A](xs: List[A]): Int = foldRight(xs, 0)((x, l) => l + 1)
 
   //EXERCISE 10
@@ -90,10 +108,17 @@ object List {
     foldLeft(reverse(xs), Cons(toAppend, Nil)) { (acc, x) => Cons(x, acc) }
   }
 
-  //EXERCISE 15
   def append[A](xs: List[A], ys: List[A]): List[A] = {
     foldLeft(ys, xs)((acc, y) => append(acc, y))
   }
+
+  def append1[A](xs: List[A], ys: List[A]): List[A] = {
+    foldRight(xs, ys)((x, acc) => Cons(x, acc))
+  }
+
+  //EXERCISE 15
+  def concat[A](ls: List[List[A]]): List[A] =
+    foldRight(ls, List[A]())((x, acc) => append(x, acc))
 
   //EXERCISE 16/17/18
   def map[A, B](xs: List[A])(f: A => B): List[B] = {
@@ -104,6 +129,10 @@ object List {
       case Nil => Nil
     }
     loop(xs, Nil)
+  }
+
+  def map1[A, B](l: List[A])(f: A => B): List[B] = {
+    foldLeft(l, List[B]())((acc, x) => append(acc, f(x)))
   }
 
   //EXERCISE 19
@@ -149,17 +178,26 @@ object List {
 
   def add(xs: List[Int], ys: List[Int]): List[Int] = {
     if (length(xs) != length(ys))
-      throw new IllegalArgumentException
+      throw new IllegalArgumentException("Cannot add element of lists with diff length")
     else
       map(zipWithIndex(xs))((tuple) => tuple._1 + get(ys, tuple._2))
   }
 
   //EXERCISE 23
-  def mergeWith[A, B](xs: List[A], ys: List[A])(f: (A, A) => B): List[B] = {
+  def mergeUsing[A, B](xs: List[A], ys: List[A])(f: (A, A) => B): List[B] = {
     if (length(xs) != length(ys))
-      throw new IllegalArgumentException
+      throw new IllegalArgumentException("Cannot add element of lists with diff length")
     else
       map(zipWithIndex(xs))((tuple) => f(tuple._1, get(ys, tuple._2)))
+  }
+
+
+  def mergeUsing1[A](xs: List[A], ys: List[A])(f: (A, A) => A): List[A] = {
+    (xs, ys) match {
+      case (Nil, x) => x
+      case (ls, Nil) => ls
+      case (Cons(l1, l1s), Cons(l2, l2s)) => append(List(f(l1, l2)), mergeUsing1(l1s, l2s)(f))
+    }
   }
 
   //EXERCISE 24
@@ -187,11 +225,11 @@ object List {
       if (length(ys) < window) acc
       else loop(tail(ys), append[List[A]](acc, take(ys, window)))
 
-    if (window == 0) Nil
-    else if (length(xs) < window) Cons(xs, Nil)
+    if (window == 0) throw new IllegalArgumentException("Window cannot be 0")
+    else if (length(xs) < window) List(xs)
     else loop(xs, Nil)
   }
 
   def hasSubsequence[A](xs: List[A], sub: List[A]): Boolean =
-    foldLeft(slide(xs, length(sub)), false)((acc, x) => acc || (x == sub))
+    isEmpty(sub) || foldLeft(slide(xs, length(sub)), false)((acc, x) => acc || (x == sub))
 }
