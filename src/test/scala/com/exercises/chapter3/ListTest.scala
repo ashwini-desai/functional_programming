@@ -4,9 +4,18 @@ import org.scalatest._
 
 class ListTest extends FlatSpec with Matchers {
   behavior of "List"
-  
+
+  it should "evaluate pattern matching" in {
+    List.evaluate should be(3)
+  }
+
   it should "return tail list" in {
     List.tail(List(1, 2, 3, 4, 5)) should be(List(2, 3, 4, 5))
+  }
+
+  it should "setHead to given list" in {
+    List.setHead(List(1, 2, 3, 4, 5), 10) should be(List(10, 2, 3, 4, 5))
+    List.setHead(Nil, 1) should be(List(1))
   }
 
   it should "drop first n elements from list" in {
@@ -24,11 +33,6 @@ class ListTest extends FlatSpec with Matchers {
     List.dropWhile1(List(1, 2, 3, 4, 5))(x => x < 10) should be(Nil)
   }
 
-  it should "setHead to given list" in {
-    List.setHead(List(1, 2, 3, 4, 5), 10) should be(List(10, 2, 3, 4, 5))
-    List.setHead(Nil, 1) should be(List(1))
-  }
-
   it should "return initial elements of list excluding last element using tail rec function" in {
     List.init(List(1, 2, 3, 4, 5)) should be(List(1, 2, 3, 4))
     List.init(List(1)) should be(Nil)
@@ -41,8 +45,16 @@ class ListTest extends FlatSpec with Matchers {
     List.init1(Nil) should be(Nil)
   }
 
-  it should "calculate product of list with fold right" in {
+  it should "calculate product of list with fold left" in {
     List.product(List(1.0, 2.0, 3.0)) should be(6.0)
+  }
+
+  it should "calculate product of list with fold right" in {
+    List.product1(List(1.0, 2.0, 3.0)) should be(6.0)
+  }
+
+  it should "create list using foldRight" in {
+    List.create(List(1, 2, 3)) should be(Cons(1, Cons(2, Cons(3, Nil))))
   }
 
   it should "calculate length of list with fold right" in {
@@ -50,9 +62,19 @@ class ListTest extends FlatSpec with Matchers {
     List.length(Nil) should be(0)
   }
 
+  it should "calculate length of list with fold left" in {
+    List.length1(List(1, 2, 3)) should be(3)
+    List.length1(Nil) should be(0)
+  }
+
   it should "implement foldLeft using tailRecursion" in {
     List.foldLeft(List(1, 2, 3), 1)((a, b) => a * b) should be(6)
     List.foldLeft[Int, Int](Nil, 1)((a, b) => a * b) should be(1)
+  }
+
+  it should "calculate sum using foldLeft" in {
+    List.sum1(List(1, 2, 3)) should be(6)
+    List.sum1(Nil) should be(0)
   }
 
   it should "implement reverse using foldLeft" in {
@@ -61,8 +83,17 @@ class ListTest extends FlatSpec with Matchers {
   }
 
   it should "implement foldLeft using foldRight" in {
-    List.foldLeft1(List(1, 2, 3), 1)((a, b) => a * b) should be(6)
-    List.foldLeft1[Int, Int](Nil, 1)((a, b) => a * b) should be(1)
+    // (((1-1)-2)-3) = -5
+    List.foldLeft1(List(1, 2, 3), 1)((a, b) => a - b) should be(-5)
+    // (1-0) = 1
+    List.foldLeft1[Int, Int](Nil, 1)((a, b) => a - b) should be(1)
+  }
+
+  it should "implement foldRight using foldLeft" in {
+    // (1-(2-(3-1))) = 1
+    List.foldRight1(List(1, 2, 3), 1)((a, b) => a - b) should be(1)
+    // (1-0) = 1
+    List.foldRight1[Int, Int](Nil, 1)((a, b) => a - b) should be(1)
   }
 
   it should "implement append using foldLeft" in {
@@ -84,11 +115,28 @@ class ListTest extends FlatSpec with Matchers {
     List.append1(Nil, Nil) should be(Nil)
   }
 
+  it should "implement append two lists using recursion" in {
+    List.append2(List(1, 2, 3), List(4, 5, 6)) should be(List(1, 2, 3, 4, 5, 6))
+    List.append2(Nil, List(4)) should be(List(4))
+    List.append2(List(4), Nil) should be(List(4))
+    List.append2(Nil, Nil) should be(Nil)
+  }
+
   it should "concatenate list of lists into single linear list" in {
-    List.concat(List(List(1,2,3), List(4, 5, 6))) should be(List(1, 2, 3, 4, 5, 6))
+    List.concat(List(List(1, 2, 3), List(4, 5, 6))) should be(List(1, 2, 3, 4, 5, 6))
     List.concat(List(List(1), Nil)) should be(List(1))
     List.concat(List(Nil, List(1))) should be(List(1))
     List.concat(List(Nil, Nil)) should be(Nil)
+  }
+
+  it should "add 1 to all elements of list using no tail rec" in {
+    List.add1ToAll(List(1, 2, 3)) should be(List(2, 3, 4))
+    List.add1ToAll(Nil) should be(Nil)
+  }
+
+  it should "create string list using toString on each element" in {
+    List.toStringList(List(1, 2, 3)) should be(List("1", "2", "3"))
+    List.toStringList(Nil) should be(Nil)
   }
 
   it should "implement map using tail rec function" in {
@@ -133,18 +181,47 @@ class ListTest extends FlatSpec with Matchers {
     List.add(Nil, Nil) should be(Nil)
 
     intercept[IllegalArgumentException](List.add(List(1, 2), List(1)))
+    intercept[IllegalArgumentException](List.add(List(1), List(1, 2)))
   }
 
-  it should "merge two lists with given function applied by using map function" in {
-    List.mergeUsing(List(1, 2, 3), List(5, 6, 7))((a, b) => a + b) should be(List(6, 8, 10))
-    List.mergeUsing[Int, Int](Nil, Nil)((a, b) => a + b) should be(Nil)
+  it should "add two lists using tail rec" in {
+    List.add1(List(1, 2, 3), List(5, 6, 7)) should be(List(6, 8, 10))
+    List.add1(Nil, Nil) should be(Nil)
 
-    intercept[IllegalArgumentException](List.mergeUsing(List(1, 2), List(1))((a, b) => a + b))
+    intercept[IllegalArgumentException](List.add1(List(1, 2), List(1)))
+    intercept[IllegalArgumentException](List.add1(List(1), List(1, 2)))
   }
 
-  it should "merge two lists with given function applied by using recursive function" in {
-    List.mergeUsing1(List(1, 2, 3), List(5, 6, 7))((a, b) => a + b) should be(List(6, 8, 10))
-    List.mergeUsing1[Int](Nil, Nil)((a, b) => a + b) should be(Nil)
+  it should "add two lists using non tail rec" in {
+    List.add2(List(1, 2, 3), List(5, 6, 7)) should be(List(6, 8, 10))
+    List.add2(Nil, Nil) should be(Nil)
+
+    intercept[IllegalArgumentException](List.add2(List(1, 2), List(1)))
+    intercept[IllegalArgumentException](List.add2(List(1), List(1, 2)))
+  }
+
+  it should "zip two lists with given function applied by using map function" in {
+    List.zipWith(List(1, 2, 3), List(5, 6, 7))((a, b) => a + b) should be(List(6, 8, 10))
+    List.zipWith[Int, Int](Nil, Nil)((a, b) => a + b) should be(Nil)
+
+    intercept[IllegalArgumentException](List.zipWith(List(1, 2), List(1))((a, b) => a + b))
+    intercept[IllegalArgumentException](List.zipWith(List(1), List(1, 2))((a, b) => a + b))
+  }
+
+  it should "zip two lists with given function applied by using tail recursive function" in {
+    List.zipWith1(List(1, 2, 3), List(5, 6, 7))((a, b) => a + b) should be(List(6, 8, 10))
+    List.zipWith1[Int, Int](Nil, Nil)((a, b) => a + b) should be(Nil)
+
+    intercept[IllegalArgumentException](List.zipWith1(List(1, 2), List(1))((a, b) => a + b))
+    intercept[IllegalArgumentException](List.zipWith1(List(1), List(1, 2))((a, b) => a + b))
+  }
+
+  it should "zip two lists with given function applied by using recursive function" in {
+    List.zipWith2(List(1, 2, 3), List(5, 6, 7))((a, b) => a + b) should be(List(6, 8, 10))
+    List.zipWith2[Int, Int](Nil, Nil)((a, b) => a + b) should be(Nil)
+
+    intercept[IllegalArgumentException](List.zipWith2(List(1, 2), List(1))((a, b) => a + b))
+    intercept[IllegalArgumentException](List.zipWith2(List(1), List(1, 2))((a, b) => a + b))
   }
 
   it should "check whether list is empty" in {
