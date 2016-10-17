@@ -1,4 +1,4 @@
-name := "scala-basics-8"
+name := "functional-programming"
 
 version := "1.0"
 
